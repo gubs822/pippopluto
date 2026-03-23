@@ -75,19 +75,22 @@ const resolveAnimeToTmdb = async (
   provider: string,
   externalId: string,
 ) => {
-  const url = `https://animemapping.stremio.dpdns.org/${provider}/${encodeURIComponent(externalId)}`;
+  const url = `https://animemapping.stremio.dpdns.org/${provider}/${encodeURIComponent(externalId)}?ep=1`;
   const data = await fetchAnimemappingJson(url);
   if (!data) return null;
   
   const tmdbId = extractTmdbIdFromAnimemapping(data);
   if (!tmdbId) return null;
 
+  const seasonValue = data?.mappings?.tmdb_episode?.season || data?.data?.mappings?.tmdb_episode?.season;
+  const season = typeof seasonValue === 'number' ? seasonValue : typeof seasonValue === 'string' ? parseInt(seasonValue, 10) : null;
+
   // Most anime are series/tv, but movies should be handled too.
   // The animemapping response usually contains subtype info.
   const subtype = (data?.requested?.subtype || data?.subtype || data?.kitsu?.subtype || '').toLowerCase();
   const type: 'movie' | 'tv' = (subtype === 'movie' || subtype === 'special') ? 'movie' : 'tv';
 
-  return { id: Number(tmdbId), type };
+  return { id: Number(tmdbId), type, season: Number.isFinite(season) ? (season as number) : null };
 };
 
 const resolveTmdbFromErdbId = async (
@@ -95,7 +98,7 @@ const resolveTmdbFromErdbId = async (
   metaType: unknown,
   tmdbKey: string,
   lang: string | null,
-) => {
+): Promise<{ id: number; type: 'movie' | 'tv'; season?: number | null } | null> => {
   if (!erdbId) return null;
   const stremioType = normalizeStremioType(metaType);
 
@@ -243,13 +246,32 @@ const translateMetaPayload = async (
   const details = await fetchTmdbJson(detailsUrl.toString());
   if (!details || typeof details !== 'object') return meta;
 
-  const translatedTitle =
+  let translatedTitle =
     typeof details.title === 'string'
       ? details.title
       : typeof details.name === 'string'
         ? details.name
         : null;
-  const translatedOverview = typeof details.overview === 'string' ? details.overview : null;
+  let translatedOverview = typeof details.overview === 'string' ? details.overview : null;
+
+  // Use season-specific metadata if available for anime seasons
+  if (tmdbRef.type === 'tv' && typeof tmdbRef.season === 'number' && tmdbRef.season > 0) {
+    const seasonUrl = new URL(`${TMDB_BASE_URL}/tv/${tmdbRef.id}/season/${tmdbRef.season}`);
+    seasonUrl.searchParams.set('api_key', config.tmdbKey);
+    seasonUrl.searchParams.set('language', lang);
+    const seasonDetails = await fetchTmdbJson(seasonUrl.toString());
+    if (seasonDetails && typeof seasonDetails === 'object') {
+      const seasonOverview = typeof seasonDetails.overview === 'string' ? seasonDetails.overview : null;
+      if (seasonOverview) {
+        translatedOverview = seasonOverview;
+      }
+      const seasonName = typeof seasonDetails.name === 'string' ? seasonDetails.name : null;
+      // If the season name is more descriptive than just "Season X", use it.
+      if (seasonName && !seasonName.match(/^Season\s+\d+$/i)) {
+        translatedTitle = `${translatedTitle}: ${seasonName}`;
+      }
+    }
+  }
 
   const nextMeta: Record<string, unknown> = { ...meta };
   translateTextFields(nextMeta, translatedTitle, translatedOverview);
