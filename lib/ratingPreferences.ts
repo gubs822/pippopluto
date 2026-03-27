@@ -14,7 +14,7 @@ export const RATING_PROVIDER_OPTIONS = [
   {
     id: 'imdb',
     label: 'IMDb',
-    iconUrl: 'https://www.google.com/s2/favicons?domain=imdb.com&sz=64',
+    iconUrl: 'https://static.vecteezy.com/system/resources/previews/049/116/727/non_2x/imdb-logo-transparent-background-free-png.png',
     accentColor: '#f5c518',
   },
   {
