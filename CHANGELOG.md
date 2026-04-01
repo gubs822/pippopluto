@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.2.2](https://github.com/realbestia1/erdb/compare/v0.2.1...v0.2.2) - 2026-04-01
+
+- bump to v0.2.2 and remove mobile configurator nested scrolling ([0e54627](https://github.com/realbestia1/erdb/commit/0e546273a3b85e382817c59c7645bb9bbb145b05))
+  - bump package version from 0.2.1 to 0.2.2
+  - remove the extra internal mobile scroll from the configurator shell
+  - let the rating provider list expand naturally on mobile instead of using its own vertical scroll
+  - make generated config string and proxy manifest boxes wrap on mobile while keeping desktop scrolling behavior
+  - align changelog and frontend version fallback with v0.2.2
+
 ## [0.2.1](https://github.com/realbestia1/erdb/compare/v0.2.0...v0.2.1) - 2026-04-01
 
 - implement robust fetch with retries for TMDB metadata ([76caef7](https://github.com/realbestia1/erdb/commit/76caef7a97c37bf983b48a0081becfd54f360c9a))
