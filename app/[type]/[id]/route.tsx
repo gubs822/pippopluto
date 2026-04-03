@@ -9,6 +9,7 @@ import {
 } from '@/lib/ratingPreferences';
 import {
   DEFAULT_BACKDROP_RATING_LAYOUT,
+  isVerticalBackdropRatingLayout,
   normalizeBackdropRatingLayout,
   type BackdropRatingLayout,
 } from '@/lib/backdropRatingLayout';
@@ -5312,7 +5313,9 @@ export async function GET(
       : imageType === 'thumbnail'
         ? thumbnailVerticalBadgeContent
         : imageType === 'backdrop'
-          ? backdropVerticalBadgeContent
+          ? isVerticalBackdropRatingLayout(backdropRatingsLayout)
+            ? backdropVerticalBadgeContent
+            : 'standard'
           : 'standard';
           
   const thumbnailSize = normalizeThumbnailSize(tokenConfig.thumbnailSize || request.nextUrl.searchParams.get('thumbnailSize'));
